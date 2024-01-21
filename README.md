@@ -1,1 +1,1 @@
-# exponential-distribution
+# Statistical Data Analysis
