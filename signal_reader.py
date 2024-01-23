@@ -4,22 +4,50 @@ import numpy as np
 
 SIGNAL_PATH = 'data/signal_50MHz.bin'
 SPIKE_THRESHOLD = 0.01
+MAX_SPIKE_INCONSISTENCY = 5
 SPIKE_RISE = 50
 SPIKE_FALL = 200
 
+
 def read_data(path):
     with open(path, 'rb') as f:
-        y = np.fromfile(f, dtype=np.float32)
-    return y
+        data = np.fromfile(f, dtype=np.float32)
+    return data
+
+
+def find_peaks(data, spikes_idx):
+    peaks = []
+    for spike in spikes_idx:
+        peaks.append(max(data[spike]))
+    return peaks
+
+
+def find_spikes(data):
+    spikes_idx = []
+    single_spike_idx = []
+    above_threshold_idx = np.where(data > SPIKE_THRESHOLD)[0]
+
+    for i in range(1, len(above_threshold_idx) - 1):
+        if above_threshold_idx[i] - above_threshold_idx[i - 1] <= MAX_SPIKE_INCONSISTENCY:
+            single_spike_idx.append(above_threshold_idx[i])
+        else:
+            spikes_idx.append(single_spike_idx)
+            single_spike_idx = [above_threshold_idx[i]]
+
+    peaks = find_peaks(data, spikes_idx)
+    return peaks
+
 
 def remove_spikes(input_array):
     spike_indices = np.where(input_array > SPIKE_THRESHOLD)[0]
     indices_to_remove = []
     for spike_index in spike_indices:
-        indices_to_remove.extend(range(max(0, spike_index - SPIKE_RISE), min(len(input_array), spike_index + SPIKE_FALL)))
+        indices_to_remove.extend(
+            range(max(0, spike_index - SPIKE_RISE), min(len(input_array), spike_index + SPIKE_FALL)))
     indices_to_remove = list(set(indices_to_remove))
     cleaned_array = np.delete(input_array, indices_to_remove)
     return cleaned_array
+
 
 def detect_spikes(input_array):
     spike_indices = np.where(input_array > SPIKE_THRESHOLD)[0]
@@ -29,18 +57,17 @@ def detect_spikes(input_array):
     start = 0
     end = 0
     for i, idx in enumerate(spike_indices):
-        if i > 0 and idx - spike_indices[i-1] > 10:
-            spikes.append(spike_indices[i-1])
+        if i > 0 and idx - spike_indices[i - 1] > 10:
+            spikes.append(spike_indices[i - 1])
 
     for i, idx in enumerate(spikes):
         if i > 0:
-            distances.append(idx - spikes[i-1])
+            distances.append(idx - spikes[i - 1])
 
     return spikes, distances
 
 
 if __name__ == "__main__":
-
     y = read_data(SIGNAL_PATH)
 
     # all data
@@ -110,7 +137,7 @@ if __name__ == "__main__":
     # marked spike threshold
     x = np.arange(1, len(y_trimmed) + 1)
     plt.plot(x, y_trimmed)
-    plt.axhline(y = SPIKE_THRESHOLD, color = 'r', linestyle = '-')
+    plt.axhline(y=SPIKE_THRESHOLD, color='r', linestyle='-')
     plt.xlabel("Próbka")
     plt.ylabel("Amplituda")
     plt.title(f'Linia odcięcia impulsów')
