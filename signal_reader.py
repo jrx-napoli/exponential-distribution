@@ -19,13 +19,13 @@ def find_peaks(data, spikes_idx):
     peaks = []
 
     for spike_idx in spikes_idx:
-        peak_max_idx = spike_idx[0]
+        spike_max_idx = spike_idx[0]
 
         for idx in spike_idx:
-            if data[idx] > data[peak_max_idx]:
-                peak_max_idx = idx
+            if data[idx] > data[spike_max_idx]:
+                spike_max_idx = idx
 
-        peaks.append(peak_max_idx)
+        peaks.append(spike_max_idx)
 
     return peaks
 
