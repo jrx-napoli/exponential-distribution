@@ -15,14 +15,13 @@ if __name__ == "__main__":
     # plt.show()
 
     # trim data to size
-    size = 1000000
+    size = 100000
     y_trimmed = y[:size]
-    sr.find_spikes(y_trimmed)
+    peaks = sr.find_spikes(y_trimmed)
 
-
-    # x = np.arange(1, len(y_trimmed) + 1)
-    # plt.plot(x, y_trimmed)
-    # plt.xlabel("Próbka")
-    # plt.ylabel("Amplituda")
-    # plt.title(f'Sygnał: {size} próbek')
-    # plt.show()
+    x = np.arange(1, len(y_trimmed) + 1)
+    plt.plot(x, y_trimmed)
+    plt.xlabel("Próbka")
+    plt.ylabel("Amplituda")
+    plt.title(f'Sygnał: {size} próbek')
+    plt.show()

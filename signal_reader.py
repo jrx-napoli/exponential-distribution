@@ -1,5 +1,3 @@
-from matplotlib import pyplot as plt
-from scipy.stats import norm
 import numpy as np
 
 SIGNAL_PATH = 'data/signal_50MHz.bin'
@@ -15,7 +13,14 @@ def read_data(path):
     return data
 
 
-def find_peaks(data, spikes_idx):
+def _find_peaks(data, spikes_idx):
+    """
+    Finds the exact indexes of impulses' peaks
+
+    :param data: (ndarray) Array of signal data
+    :param spikes_idx: (list) List of spikes indexes
+    :return: (list) Indexes of local maximums for aLL spikes
+    """
     peaks = []
 
     for spike_idx in spikes_idx:
@@ -31,129 +36,32 @@ def find_peaks(data, spikes_idx):
 
 
 def find_spikes(data):
+    """
+    Finds indexes of local maximums exceeding the impulse threshold.
+
+    :param data: (ndarray) Array of signal data
+    :return: (list) Indexes of all local maximums
+    """
     spikes_idx = []
     single_spike_idx = []
+
+    # get all indexes at which signal exceeds the impulse threshold
     above_threshold_idx = np.where(data > SPIKE_THRESHOLD)[0]
 
-    for i in range(1, len(above_threshold_idx) - 1):
+    for i in range(1, len(above_threshold_idx)):
+        # indexes separated at most by MAX_SPIKE_INCONSISTENCY
+        # are counted as belonging to the same impulse
         if above_threshold_idx[i] - above_threshold_idx[i - 1] <= MAX_SPIKE_INCONSISTENCY:
             single_spike_idx.append(above_threshold_idx[i])
+
+        # in other case we detect the end of the impulse
         else:
             spikes_idx.append(single_spike_idx)
             single_spike_idx = [above_threshold_idx[i]]
 
-    peaks = find_peaks(data, spikes_idx)
+        # include the last impulse
+        if i == len(above_threshold_idx) - 1:
+            spikes_idx.append(single_spike_idx)
+
+    peaks = _find_peaks(data, spikes_idx)
     return peaks
-
-
-def remove_spikes(input_array):
-    spike_indices = np.where(input_array > SPIKE_THRESHOLD)[0]
-    indices_to_remove = []
-    for spike_index in spike_indices:
-        indices_to_remove.extend(
-            range(max(0, spike_index - SPIKE_RISE), min(len(input_array), spike_index + SPIKE_FALL)))
-    indices_to_remove = list(set(indices_to_remove))
-    cleaned_array = np.delete(input_array, indices_to_remove)
-    return cleaned_array
-
-
-def detect_spikes(input_array):
-    spike_indices = np.where(input_array > SPIKE_THRESHOLD)[0]
-    spikes = []
-    distances = []
-
-    start = 0
-    end = 0
-    for i, idx in enumerate(spike_indices):
-        if i > 0 and idx - spike_indices[i - 1] > 10:
-            spikes.append(spike_indices[i - 1])
-
-    for i, idx in enumerate(spikes):
-        if i > 0:
-            distances.append(idx - spikes[i - 1])
-
-    return spikes, distances
-
-
-if __name__ == "__main__":
-    y = read_data(SIGNAL_PATH)
-
-    # all data
-    x = np.arange(1, len(y) + 1)
-    plt.plot(x, y)
-    plt.xlabel("Próbka")
-    plt.ylabel("Amplituda")
-    plt.title(f'Sygnał: {len(y)} próbek')
-    plt.show()
-
-    # trim data to size
-    size = 1000000
-    y_trimmed = y[:size]
-    x = np.arange(1, len(y_trimmed) + 1)
-    plt.plot(x, y_trimmed)
-    plt.xlabel("Próbka")
-    plt.ylabel("Amplituda")
-    plt.title(f'Sygnał: {size} próbek')
-    plt.show()
-
-    # remove spikes
-    y_no_spikes = remove_spikes(y_trimmed)
-    x = np.arange(1, len(y_no_spikes) + 1)
-    plt.plot(x, y_no_spikes)
-    plt.xlabel("Próbka")
-    plt.ylabel("Amplituda")
-    plt.title(f'Sygnał: usunięte impulsy')
-    plt.show()
-
-    # histogram
-    plt.hist(y_no_spikes, bins=50, density=True, alpha=0.6)
-    mu, std = norm.fit(y_no_spikes)
-    xmin, xmax = plt.xlim()
-    x = np.linspace(xmin, xmax, 100)
-    p = norm.pdf(x, mu, std)
-    plt.plot(x, p, 'k', linewidth=2)
-    plt.xlabel("Amplituda")
-    plt.ylabel("Ilość próbek")
-    plt.title(f'Histogram amplitud dla {size} próbek')
-    plt.show()
-
-    # statistics
-    print(f'Noise mean: {mu}')
-    print(f'Noise standard deviation: {std}')
-
-    # cumulative distribution function
-    sorted_array = np.sort(y_no_spikes)
-    cdf = np.arange(1, len(sorted_array) + 1) / len(sorted_array)
-    plt.plot(sorted_array, cdf, label='CDF')
-    plt.title('Dystrybuanta szumu')
-    plt.xlabel('Wartość szumu')
-    plt.ylabel('Prawdopodobieństwo')
-    plt.grid(True)
-    plt.show()
-
-    # boxplot
-    plt.boxplot(y_no_spikes)
-    plt.grid(True)
-    plt.show()
-
-    # single spike
-    y_spike = y[67650:67900]
-    x_spike = np.arange(1, len(y_spike) + 1)
-    plt.plot(x_spike, y_spike)
-    plt.show()
-
-    # marked spike threshold
-    x = np.arange(1, len(y_trimmed) + 1)
-    plt.plot(x, y_trimmed)
-    plt.axhline(y=SPIKE_THRESHOLD, color='r', linestyle='-')
-    plt.xlabel("Próbka")
-    plt.ylabel("Amplituda")
-    plt.title(f'Linia odcięcia impulsów')
-    plt.show()
-
-    # detect spikes
-    spikes, distances = detect_spikes(y)
-    print(f'Total spikes detected: {len(spikes)}')
-    print(f'Mean distance between spikes: {np.mean(distances)}')
-    print(f'Min distance between spikes: {np.min(distances)}')
-    print(f'Max distance between spikes: {np.max(distances)}')
