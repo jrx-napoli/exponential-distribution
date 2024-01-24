@@ -17,8 +17,16 @@ def read_data(path):
 
 def find_peaks(data, spikes_idx):
     peaks = []
-    for spike in spikes_idx:
-        peaks.append(max(data[spike]))
+
+    for spike_idx in spikes_idx:
+        peak_max_idx = spike_idx[0]
+
+        for idx in spike_idx:
+            if data[idx] > data[peak_max_idx]:
+                peak_max_idx = idx
+
+        peaks.append(peak_max_idx)
+
     return peaks
 
 
