@@ -13,12 +13,12 @@ def read_data(path):
     return data
 
 
-def _find_peaks(data, spikes_idx):
+def _find_peak_indexes(data, spikes_idx):
     """
-    Finds the exact indexes of impulses' peaks
+    Finds the exact indexes of spikes' peaks
 
     :param data: (ndarray) Array of signal data
-    :param spikes_idx: (list) List of spikes indexes
+    :param spikes_idx: (list) List of lists of spikes indexes
     :return: (list) Indexes of local maximums for aLL spikes
     """
     peaks = []
@@ -63,5 +63,5 @@ def find_spikes(data):
         if i == len(above_threshold_idx) - 1:
             spikes_idx.append(single_spike_idx)
 
-    peaks = _find_peaks(data, spikes_idx)
+    peaks = _find_peak_indexes(data, spikes_idx)
     return peaks

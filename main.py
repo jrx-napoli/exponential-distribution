@@ -1,23 +1,15 @@
+import signal_processor as sp
 import numpy as np
 from matplotlib import pyplot as plt
 
-import signal_reader as sr
-
 if __name__ == "__main__":
-    y = sr.read_data(sr.SIGNAL_PATH)
-
-    # all data
-    # x = np.arange(1, len(y) + 1)
-    # plt.plot(x, y)
-    # plt.xlabel("Próbka")
-    # plt.ylabel("Amplituda")
-    # plt.title(f'Sygnał: {len(y)} próbek')
-    # plt.show()
+    y = sp.read_data(sp.SIGNAL_PATH)
 
     # trim data to size
-    size = 100000
+    size = 1000000
     y_trimmed = y[:size]
-    peaks = sr.find_spikes(y_trimmed)
+    spikes = sp.find_spikes(y_trimmed)
+    # todo: find mean distances
 
     x = np.arange(1, len(y_trimmed) + 1)
     plt.plot(x, y_trimmed)
