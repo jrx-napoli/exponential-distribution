@@ -2,7 +2,7 @@ import numpy as np
 
 SIGNAL_PATH = 'data/signal_50MHz.bin'
 SPIKE_THRESHOLD = 0.01
-MAX_SPIKE_INCONSISTENCY = 5
+MAX_SPIKE_INCONSISTENCY = 150
 SPIKE_RISE = 50
 SPIKE_FALL = 200
 
@@ -65,3 +65,16 @@ def find_spikes(data):
 
     peaks = _find_peak_indexes(data, spikes_idx)
     return peaks
+
+
+def calculate_distances(indexes):
+    """
+    Calculates distances between provided indexes
+
+    :param indexes: (list) List Of indexes
+    :return: (list) List of distances between indexes
+    """
+    distances = []
+    for i in range(1, len(indexes)):
+        distances.append(indexes[i] - indexes[i - 1])
+    return distances
