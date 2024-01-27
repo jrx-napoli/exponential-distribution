@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from scipy.stats import expon
 
 SIGNAL_PATH = 'data/signal_50MHz.bin'
+K = 5
 
 if __name__ == "__main__":
     y = sp.read_data(SIGNAL_PATH)
@@ -21,8 +22,12 @@ if __name__ == "__main__":
     for i in range(len(distances)):
         distances[i] = (distances[i] / total_size) * 1000
 
+    # calculate distance weights
+    weights = sp.calculate_distance_weights(distances, k=K)
+
     # estimate lambda
-    lambda_est = 1 / np.mean(distances)
+    lambda_est = 1 / np.average(a=distances, weights=weights)
+    print(lambda_est)
 
     # draw histogram
     plt.hist(distances, bins=30, density=True, alpha=0.7, label='Histogram')

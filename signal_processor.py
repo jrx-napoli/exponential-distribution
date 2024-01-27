@@ -77,3 +77,24 @@ def calculate_distances(indexes):
     for i in range(1, len(indexes)):
         distances.append(indexes[i] - indexes[i - 1])
     return distances
+
+
+def calculate_distance_weights(distances, k):
+    """
+    Assign weight to every distance based on its length
+
+    :param distances: (list) List of distances between detected impulses
+    :param k: k-fold threshold used to detecting large intervals
+    :return:
+    """
+    weights = np.ones_like(distances, dtype=float)
+    distances_avg = np.mean(distances)
+
+    # find distances greater than average
+    overlapping_indices = np.where(distances > k * distances_avg)[0]
+
+    # adjust weights
+    for index in overlapping_indices:
+        weights[index] = distances_avg / distances[index]
+
+    return weights
