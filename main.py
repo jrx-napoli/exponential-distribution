@@ -3,41 +3,37 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import expon
 
-MAX_DATA_SIZE = 50_000_000
+SIGNAL_PATH = 'data/signal_50MHz.bin'
 
 if __name__ == "__main__":
-    y = sp.read_data(sp.SIGNAL_PATH)
+    y = sp.read_data(SIGNAL_PATH)
 
-    # trim data to size
-    size = MAX_DATA_SIZE
-    y_trimmed = y[:size]
+    # get total size of data
+    total_size = len(y)
 
     # get the positions of spikes
-    spikes = sp.find_spikes(y_trimmed)
+    spikes = sp.find_spikes(y)
 
     # calculate distances
     distances = sp.calculate_distances(spikes)
 
+    # convert distances to milliseconds
+    for i in range(len(distances)):
+        distances[i] = (distances[i] / total_size) * 1000
+
     # estimate lambda
     lambda_est = 1 / np.mean(distances)
 
-    # Narysuj histogram
+    # draw histogram
     plt.hist(distances, bins=30, density=True, alpha=0.7, label='Histogram')
 
-    # Narysuj funkcję gęstości prawdopodobieństwa rozkładu wykładniczego
+    # draw pdf
     x = np.linspace(0, np.max(distances), 100)
     y = expon.pdf(x, scale=1 / lambda_est)
-    plt.plot(x, y, 'r-', label='Exp($\lambda$)')
+    plt.plot(x, y, 'r-', label='Exp($\\lambda$)')
 
-    # Dodaj legendę, etykiety itp.
+    # display on one figure
     plt.legend()
-    plt.xlabel('Odstęp czasowy')
-    plt.ylabel('Prawdopodobieństwo')
+    plt.xlabel('Time difference [ms]')
+    plt.ylabel('Probability')
     plt.show()
-
-    # x = np.arange(1, len(y_trimmed) + 1)
-    # plt.plot(x, y_trimmed)
-    # plt.xlabel("Próbka")
-    # plt.ylabel("Amplituda")
-    # plt.title(f'Sygnał: {size} próbek')
-    # plt.show()
